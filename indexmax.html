@@ -273,7 +273,7 @@
         if (consecutiveCorrect >= 4) {
           const congratsMessages = ["Hooray!", "Well Done!", "Way to Go!"];
           const randomMessage = congratsMessages[Math.floor(Math.random() * congratsMessages.length)];
-          message = `${message} <br><span style="font-size: 1em; font-family: 'Arial', sans-serif; color: #ffcc00;">You have answered ${consecutiveCorrect} correct answers consecutively! ${randomMessage}</span>`;
+          message = `${message} <br><span style="font-size: 1.2em; font-family: 'Arial', sans-serif; color: #ffcc00;">You have answered ${consecutiveCorrect} correct answers consecutively! ${randomMessage}</span>`;
         }
       } else {
         message = `Incorrect! The correct answer was ${currentQuestion.correctAnswer}. Please try again.`;
