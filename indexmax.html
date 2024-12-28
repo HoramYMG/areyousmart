@@ -152,7 +152,7 @@
         font-size: 1.1em;
       }
       button, .input-field {
-        width: 80%;
+        width: 90%;
         font-size: 1.1em;
       }
       .quit-button,
@@ -170,7 +170,7 @@
         font-size: 1em;
       }
       button, .input-field {
-        width: 80%;
+        width: 90%;
         font-size: 1em;
       }
     }
@@ -268,10 +268,10 @@
       if (Math.abs(userAnswer - currentQuestion.correctAnswer) < 0.01) {
         correctAnswers++;
         consecutiveCorrect++;
-        message = `Correct! You now have ${correctAnswers} correct answers.`;
+        message = `Correct! You have answered ${correctAnswers} correct answers.`;
 
         if (consecutiveCorrect >= 4) {
-          const congratsMessages = ["Hooray!", "Well Done!", "Way to Go!"];
+          const congratsMessages = ["Hooray!", "Well Done!", "Way to Go!", "wow!"];
           const randomMessage = congratsMessages[Math.floor(Math.random() * congratsMessages.length)];
           message = `${message} <br><span style="font-size: 1.2em; font-family: 'Arial', sans-serif; color: #ffcc00;">You have answered ${consecutiveCorrect} correct answers consecutively! ${randomMessage}</span>`;
         }
