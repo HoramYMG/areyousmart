@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Memory Test</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #111;
+      color: #0ff;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+      position: relative;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      flex-direction: column;
+    }
+
+    #countdown, #input-section, #result {
+      margin: 20px;
+      font-size: 1.5rem;
+      z-index: 10;
+    }
+
+    .word {
+      position: absolute;
+      font-size: 1.3rem;
+      color: #0ff;
+      opacity: 0.9;
+      z-index: 5;
+      white-space: nowrap;
+    }
+
+    input {
+      padding: 10px;
+      width: 80%;
+      max-width: 400px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: none;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #00f2ff;
+      border: none;
+      border-radius: 8px;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-top: 10px;
+    }
+
+    #words-container {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="countdown">Get Ready...</div>
+  <div id="words-container"></div>
+
+  <div id="input-section" style="display:none;">
+    <p>Enter the words you remember (separated by spaces):</p>
+    <input type="text" id="userInput" placeholder="Type words here...">
+    <br>
+    <button onclick="checkAnswers()">Submit</button>
+  </div>
+
+  <div id="result"></div>
+  <button id="retryBtn" style="display:none;" onclick="startTest()">Try Again</button>
+
+  <script>
+    const wordList = [
+      "ability", "able", "about", "above", "accept", "account", "across", "action", "activity", "actually",
+      "add", "address", "admit", "adult", "affect", "after", "again", "against", "age", "agency",
+      "agree", "ahead", "air", "all", "allow", "almost", "alone", "along", "already", "also",
+      "although", "always", "among", "amount", "analysis", "animal", "another", "answer", "anyone", "appear",
+      "apply", "approach", "area", "argue", "arm", "around", "arrive", "article", "artist", "assume",
+      "attack", "attention", "audience", "author", "available", "avoid", "away", "baby", "back", "bad",
+      "ball", "bank", "bar", "base", "beat", "beautiful", "because", "become", "before", "begin",
+      "behavior", "behind", "believe", "benefit", "best", "better", "between", "beyond", "big", "bill",
+      "billion", "bit", "black", "blood", "blue", "board", "body", "book", "both", "box",
+      "boy", "break", "bring", "brother", "budget", "build", "building", "business", "buy", "call",
+      "camera", "campaign", "can", "cancer", "capital", "car", "card", "care", "career", "carry",
+      "case", "catch", "cause", "cell", "center", "central", "century", "certain", "chair", "challenge",
+      "chance", "change", "character", "charge", "check", "child", "choice", "church", "citizen", "city",
+      "civil", "claim", "class", "clear", "close", "coach", "cold", "college", "color", "come"
+    ];
+
+    let selectedWords = [];
+    let wordBoxes = [];
+
+    function getRandomWords(count) {
+      const shuffled = [...wordList].sort(() => 0.5 - Math.random());
+      return shuffled.slice(0, count);
+    }
+
+    function clearScreen() {
+      document.getElementById('words-container').innerHTML = '';
+      document.getElementById('countdown').style.display = 'block';
+      document.getElementById('input-section').style.display = 'none';
+      document.getElementById('result').textContent = '';
+      document.getElementById('retryBtn').style.display = 'none';
+      document.getElementById('userInput').value = '';
+      wordBoxes = [];
+    }
+
+    function isOverlapping(newBox) {
+      const padding = 5;
+      return wordBoxes.some(box => (
+        newBox.left < box.right + padding &&
+        newBox.right > box.left - padding &&
+        newBox.top < box.bottom + padding &&
+        newBox.bottom > box.top - padding
+      ));
+    }
+
+    function showWords() {
+      const container = document.getElementById('words-container');
+      container.innerHTML = '';
+      selectedWords = getRandomWords(10);
+      wordBoxes = [];
+
+      selectedWords.forEach(word => {
+        const wordEl = document.createElement('div');
+        wordEl.className = 'word';
+        wordEl.textContent = word;
+        container.appendChild(wordEl);
+
+        let placed = false;
+        let attempts = 0;
+        const maxAttempts = 100;
+
+        while (!placed && attempts < maxAttempts) {
+          const randX = Math.random() * (window.innerWidth - 100);
+          const randY = Math.random() * (window.innerHeight - 30);
+          wordEl.style.left = `${randX}px`;
+          wordEl.style.top = `${randY}px`;
+
+          const rect = wordEl.getBoundingClientRect();
+          const newBox = {
+            left: rect.left,
+            right: rect.right,
+            top: rect.top,
+            bottom: rect.bottom
+          };
+
+          if (!isOverlapping(newBox)) {
+            wordBoxes.push(newBox);
+            placed = true;
+          }
+          attempts++;
+        }
+
+        if (!placed) wordEl.remove(); // Remove word if not placeable
+      });
+
+      setTimeout(() => {
+        container.innerHTML = '';
+        document.getElementById('input-section').style.display = 'block';
+      }, 5000);
+    }
+
+    function startTest() {
+      clearScreen();
+      let countdown = 3;
+      const countdownEl = document.getElementById('countdown');
+      const interval = setInterval(() => {
+        if (countdown > 0) {
+          countdownEl.textContent = countdown;
+          countdown--;
+        } else {
+          clearInterval(interval);
+          countdownEl.style.display = 'none';
+          showWords();
+        }
+      }, 1000);
+    }
+
+    function checkAnswers() {
+      const input = document.getElementById('userInput').value.trim().toLowerCase();
+      const userWords = input.split(/\s+/);
+      let correctCount = 0;
+
+      userWords.forEach(word => {
+        if (selectedWords.includes(word)) correctCount++;
+      });
+
+      const resultText = `You got ${correctCount} out of 10 correct.`;
+      const congrats = correctCount > 5 ? "🎉 Congratulations! 🎉" : "Keep practicing!";
+      document.getElementById('result').textContent = `${resultText} ${congrats}`;
+      document.getElementById('retryBtn').style.display = 'inline-block';
+      document.getElementById('input-section').style.display = 'none';
+    }
+
+    window.onload = startTest;
+  </script>
+</body>
+</html>
+
+

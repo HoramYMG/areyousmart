@@ -1,0 +1,161 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Reaction Time Test</title>
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+    user-select: none;
+  }
+  body {
+    background: #222;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  #start-btn {
+    padding: 12px 25px;
+    font-size: 1.2rem;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    background: linear-gradient(45deg, #0077ff, #00ff99);
+    color: #fff;
+    box-shadow: 0 0 10px #00ff99;
+    user-select: none;
+    margin-bottom: 30px;
+    transition: opacity 0.3s;
+  }
+  #start-btn:hover:enabled {
+    background: linear-gradient(45deg, #005fcc, #00cc7a);
+  }
+  #message-box {
+    width: 100%;
+    max-width: 500px;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+    padding: 0 20px;
+    box-sizing: border-box;
+    cursor: pointer;
+  }
+  #message {
+    margin-top: 20px;
+    font-size: 1.2rem;
+    min-height: 1.2rem;
+  }
+</style>
+</head>
+<body>
+
+<button id="start-btn" aria-label="Start Reaction Time Test">Start Reaction Test</button>
+
+<div id="message-box" aria-live="polite" tabindex="0" role="button" aria-pressed="false">
+  Press Start to begin
+</div>
+
+<div id="message" role="alert" aria-live="assertive"></div>
+
+<script>
+  const startBtn = document.getElementById('start-btn');
+  const messageBox = document.getElementById('message-box');
+  const message = document.getElementById('message');
+
+  let timeoutId = null;
+  let startTime = 0;
+  let waitingForReaction = false;
+  let reacted = false;
+
+  function getRandomDelay() {
+    return 1000 + Math.floor(Math.random() * 5000); // 1s to 6s
+  }
+
+  function startTest() {
+    reacted = false;
+    waitingForReaction = false;
+    message.textContent = '';
+    document.body.style.backgroundColor = '#cc0000'; // red
+    messageBox.textContent = 'Get ready...';
+
+    let intervalId = setInterval(() => {
+      const randNum = Math.floor(Math.random() * 9000 + 1000);
+      messageBox.textContent = `Get ready... ${randNum}`;
+    }, 200);
+
+    timeoutId = setTimeout(() => {
+      clearInterval(intervalId);
+      document.body.style.backgroundColor = '#00cc00'; // green
+      messageBox.textContent = 'Touch now!';
+      startTime = performance.now();
+      waitingForReaction = true;
+    }, getRandomDelay());
+
+    startBtn.disabled = true;
+    startBtn.style.opacity = '0.5';
+    messageBox.setAttribute('aria-pressed', 'true');
+  }
+
+  function endTest() {
+    if (!waitingForReaction) {
+      clearTimeout(timeoutId);
+      document.body.style.backgroundColor = '#cc0000'; // red
+      messageBox.textContent = 'Too soon! Wait for green.';
+      message.textContent = 'You clicked too early! Try again.';
+      startBtn.disabled = false;
+      startBtn.style.opacity = '1';
+      messageBox.setAttribute('aria-pressed', 'false');
+      return;
+    }
+
+    if (reacted) return;
+
+    reacted = true;
+    waitingForReaction = false;
+    const endTime = performance.now();
+    const reactionTime = Math.round(endTime - startTime);
+    messageBox.textContent = `Your reaction time is ${reactionTime} ms`;
+    message.textContent = '';
+    document.body.style.backgroundColor = '#004400'; // dark green
+
+    startBtn.disabled = false;
+    startBtn.style.opacity = '1';
+    messageBox.setAttribute('aria-pressed', 'false');
+  }
+
+  startBtn.addEventListener('click', startTest);
+  messageBox.addEventListener('click', endTest);
+
+  // Make entire screen clickable/touchable to end test
+  document.body.addEventListener('click', () => {
+    if (waitingForReaction) endTest();
+  });
+
+  document.body.addEventListener('touchstart', (e) => {
+    if (waitingForReaction) {
+      e.preventDefault();
+      endTest();
+    }
+  }, { passive: false });
+
+  // Allow pressing Enter anywhere
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && waitingForReaction) {
+      e.preventDefault();
+      endTest();
+    }
+  });
+</script>
+
+</body>
+</html>

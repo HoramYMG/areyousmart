@@ -1,0 +1,208 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>English</title>
+  <style>
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background-image: url('URL_HERE'); /* You can replace this later */
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-color: #000;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      text-align: center;
+      padding: 10px;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    .button-container {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      background: linear-gradient(135deg, #00f2ff, #5b00ff);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.3s;
+      min-width: 90px;
+    }
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #00f2ff;
+    }
+    input {
+      padding: 12px 10px;
+      border-radius: 5px;
+      border: none;
+      margin-top: 10px;
+      font-size: 1rem;
+      height: 50px;
+      box-sizing: border-box;
+      min-width: 150px;
+    }
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+      .button-container {
+        gap: 10px;
+      }
+      button {
+        font-size: 0.9rem;
+        padding: 10px 16px;
+        min-width: 70px;
+      }
+      input {
+        font-size: 0.9rem;
+        height: 45px;
+        min-width: 120px;
+        margin-top: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>English</h1>
+  <div class="button-container">
+    <button onclick="startGame('easy')">Easy</button>
+    <button onclick="startGame('hard')">Hard</button>
+  </div>
+  <div id="game">
+    <div id="scrambled"></div>
+    <input type="text" id="userInput" placeholder="Unscramble the word" autocomplete="off"/>
+    <div>
+      <button onclick="checkWord()">Submit</button>
+    </div>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    // Word list
+    const wordList = [
+      "ability", "absence", "academy", "account", "accused", "achieve", "acquire", "address", "advance", "advice",
+      "affect", "afford", "afraid", "agency", "agenda", "almost", "already", "amazed", "amount", "animal",
+      "answer", "anxiety", "anyone", "appeal", "arrive", "aspect", "assign", "assist", "assume", "attack",
+      "attempt", "attract", "auction", "average", "awesome", "balance", "barrier", "battery", "because", "benefit",
+      "beyond", "bitter", "bizarre", "blanket", "bother", "bottle", "bottom", "bounce", "bravery", "briefly",
+      "brother", "budget", "builder", "butter", "camera", "campaign", "campus", "capture", "carbon", "career",
+      "careful", "carrier", "castle", "casual", "celebrity", "center", "ceremony", "chance", "change", "channel",
+      "charge", "charity", "cheap", "cheese", "choice", "choose", "church", "circle", "citizen", "classic",
+      "climate", "clinic", "closer", "clothes", "collect", "college", "combine", "comfort", "command", "comment",
+      "common", "company", "compare", "compete", "complain", "complete", "complex", "compose", "concept", "concern",
+      "concert", "conduct", "confirm", "connect", "consent", "consider", "contact", "contain", "content", "contest",
+      "context", "control", "convert", "council", "counter", "country", "crisis", "custom", "damage", "danger",
+      "dealer", "debate", "decide", "declare", "decline", "defeat", "defend", "define", "deliver", "demand",
+      "depend", "deposit", "describe", "deserve", "desire", "detail", "detect", "develop", "device", "differ",
+      "digital", "dining", "dinner", "direct", "discuss", "disease", "display", "dispute", "distance", "diverse",
+      "divide", "doctor", "dollar", "domain", "double", "dragon", "drama", "dream", "driven", "driver"
+    ];
+
+    // Filtered word pools by difficulty
+    const easyWords = wordList.filter(word => word.length >= 2 && word.length <= 6);
+    const hardWords = wordList.filter(word => word.length >= 7 && word.length <= 12);
+
+    let currentWords = [];  // all anagrams that match scrambled
+    let scrambledWord = "";
+    let consecutiveCorrect = 0;
+    let currentDifficulty = "easy";
+
+    // Helper to sort letters in a word alphabetically (canonical form)
+    function sortLetters(word) {
+      return word.split('').sort().join('');
+    }
+
+    // Find all words that are anagrams of the chosen word
+    function findAnagrams(word, wordPool) {
+      const sorted = sortLetters(word);
+      return wordPool.filter(w => sortLetters(w) === sorted);
+    }
+
+    // Shuffle a word's letters randomly
+    function shuffleWord(word) {
+      let shuffled = word.split('');
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled.join('');
+    }
+
+    function startGame(difficulty) {
+      currentDifficulty = difficulty;
+      const wordPool = difficulty === 'easy' ? easyWords : hardWords;
+
+      // Pick a random word
+      const chosenWord = wordPool[Math.floor(Math.random() * wordPool.length)];
+
+      // Find all anagrams in the pool
+      currentWords = findAnagrams(chosenWord, wordPool);
+
+      // Pick one to scramble (we scramble the original chosen word for consistency)
+      scrambledWord = shuffleWord(chosenWord);
+
+      // Make sure scrambled word isn't identical to original (very unlikely but just in case)
+      while (scrambledWord === chosenWord) {
+        scrambledWord = shuffleWord(chosenWord);
+      }
+
+      document.getElementById('scrambled').innerText = `Scrambled word: ${scrambledWord}`;
+      document.getElementById('result').innerText = '';
+      document.getElementById('userInput').value = '';
+      document.getElementById('userInput').focus();
+    }
+
+    function checkWord() {
+      const userInputEl = document.getElementById('userInput');
+      const userWord = userInputEl.value.trim().toLowerCase();
+
+      let message = "";
+      if (currentWords.includes(userWord)) {
+        consecutiveCorrect++;
+        message = "Correct! Well done!";
+
+        if (consecutiveCorrect > 4) {
+          const congratulations = ["Hooray!", "Well done!", "Way to go!", "Keep it up!", "Nice work!"];
+          const randomMsg = congratulations[Math.floor(Math.random() * congratulations.length)];
+          message += ` ${randomMsg} (${consecutiveCorrect} in a row)`;
+        }
+      } else {
+        message = `Incorrect. The word was: ${currentWords[0]}`;
+        consecutiveCorrect = 0;
+      }
+
+      document.getElementById('result').innerText = message;
+      userInputEl.value = '';
+
+      setTimeout(() => {
+        startGame(currentDifficulty);
+      }, 1500);
+    }
+
+    document.getElementById('userInput').addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        checkWord();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Maze Game</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #222;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      -moz-user-select: none;
+    }
+    canvas {
+      border: 2px solid #fff;
+      background-color: #000;
+      touch-action: none;
+    }
+    #info {
+      margin-top: 10px;
+    }
+    #timer {
+      font-size: 1.2em;
+    }
+    #tryAgain {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 1em;
+      cursor: pointer;
+      background-color: #0ff;
+      border: none;
+      border-radius: 5px;
+      color: #000;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="mazeCanvas"></canvas>
+  <div id="info">
+    <div id="timer">Time: 0s</div>
+    <button id="tryAgain">Try Again</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('mazeCanvas');
+    const ctx = canvas.getContext('2d');
+    const timerEl = document.getElementById('timer');
+    const tryAgainBtn = document.getElementById('tryAgain');
+
+    let cols, rows;
+    let w = 40; // Width of each cell
+    let grid = [];
+    let current;
+    let stack = [];
+    let player;
+    let end;
+    let timer;
+    let seconds = 0;
+    let gameStarted = false;
+    let gameEnded = false;
+
+    function setup() {
+      // Resize canvas
+      canvas.width = Math.floor(window.innerWidth * 0.8);
+      canvas.height = Math.floor(window.innerHeight * 0.8);
+      cols = Math.floor(canvas.width / w);
+      rows = Math.floor(canvas.height / w);
+      grid = [];
+      stack = [];
+      gameEnded = false;
+      seconds = 0;
+      gameStarted = false;
+      timerEl.textContent = 'Time: 0s';
+
+      // Create grid
+      for (let j = 0; j < rows; j++) {
+        for (let i = 0; i < cols; i++) {
+          let cell = new Cell(i, j);
+          grid.push(cell);
+        }
+      }
+
+      current = grid[0];
+
+      // Generate maze
+      generateMaze();
+
+      // Set player at start
+      player = { i: 0, j: 0 };
+
+      // Set end point
+      end = { i: cols - 1, j: rows - 1 };
+
+      draw();
+
+      clearInterval(timer);
+      timer = setInterval(() => {
+        if (gameStarted && !gameEnded) {
+          seconds++;
+          timerEl.textContent = `Time: ${seconds}s`;
+
+          if (seconds === 60) {
+            gameEnded = true;
+            alert("⏰ Time is up!");
+          }
+        }
+      }, 1000);
+    }
+
+    function index(i, j) {
+      if (i < 0 || j < 0 || i >= cols || j >= rows) return -1;
+      return i + j * cols;
+    }
+
+    function Cell(i, j) {
+      this.i = i;
+      this.j = j;
+      this.walls = [true, true, true, true]; // top, right, bottom, left
+      this.visited = false;
+
+      this.checkNeighbors = function() {
+        let neighbors = [];
+
+        let top = grid[index(i, j - 1)];
+        let right = grid[index(i + 1, j)];
+        let bottom = grid[index(i, j + 1)];
+        let left = grid[index(i - 1, j)];
+
+        if (top && !top.visited) neighbors.push(top);
+        if (right && !right.visited) neighbors.push(right);
+        if (bottom && !bottom.visited) neighbors.push(bottom);
+        if (left && !left.visited) neighbors.push(left);
+
+        if (neighbors.length > 0) {
+          let r = Math.floor(Math.random() * neighbors.length);
+          return neighbors[r];
+        } else {
+          return undefined;
+        }
+      };
+
+      this.show = function(ctx) {
+        let x = this.i * w;
+        let y = this.j * w;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+
+        if (this.walls[0]) {
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + w, y);
+          ctx.stroke();
+        }
+        if (this.walls[1]) {
+          ctx.beginPath();
+          ctx.moveTo(x + w, y);
+          ctx.lineTo(x + w, y + w);
+          ctx.stroke();
+        }
+        if (this.walls[2]) {
+          ctx.beginPath();
+          ctx.moveTo(x + w, y + w);
+          ctx.lineTo(x, y + w);
+          ctx.stroke();
+        }
+        if (this.walls[3]) {
+          ctx.beginPath();
+          ctx.moveTo(x, y + w);
+          ctx.lineTo(x, y);
+          ctx.stroke();
+        }
+      };
+    }
+
+    function removeWalls(a, b) {
+      let x = a.i - b.i;
+      if (x === 1) {
+        a.walls[3] = false;
+        b.walls[1] = false;
+      } else if (x === -1) {
+        a.walls[1] = false;
+        b.walls[3] = false;
+      }
+      let y = a.j - b.j;
+      if (y === 1) {
+        a.walls[0] = false;
+        b.walls[2] = false;
+      } else if (y === -1) {
+        a.walls[2] = false;
+        b.walls[0] = false;
+      }
+    }
+
+    function generateMaze() {
+      current.visited = true;
+
+      while (true) {
+        let next = current.checkNeighbors();
+        if (next) {
+          next.visited = true;
+          stack.push(current);
+          removeWalls(current, next);
+          current = next;
+        } else if (stack.length > 0) {
+          current = stack.pop();
+        } else {
+          break;
+        }
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < grid.length; i++) {
+        grid[i].show(ctx);
+      }
+
+      // Draw end point
+      ctx.fillStyle = '#0f0';
+      ctx.fillRect(end.i * w + w / 4, end.j * w + w / 4, w / 2, w / 2);
+
+      // Draw player
+      ctx.fillStyle = '#f00';
+      ctx.beginPath();
+      ctx.arc(player.i * w + w / 2, player.j * w + w / 2, w / 4, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+
+    function movePlayer(direction) {
+      if (gameEnded) return;
+
+      let i = player.i;
+      let j = player.j;
+      let cell = grid[index(i, j)];
+
+      switch (direction) {
+        case 'up':
+          if (!cell.walls[0]) {
+            player.j--;
+            gameStarted = true;
+          }
+          break;
+        case 'right':
+          if (!cell.walls[1]) {
+            player.i++;
+            gameStarted = true;
+          }
+          break;
+        case 'down':
+          if (!cell.walls[2]) {
+            player.j++;
+            gameStarted = true;
+          }
+          break;
+        case 'left':
+          if (!cell.walls[3]) {
+            player.i--;
+            gameStarted = true;
+          }
+          break;
+      }
+
+      draw();
+      checkWin();
+    }
+
+    function checkWin() {
+      if (player.i === end.i && player.j === end.j) {
+        gameEnded = true;
+        clearInterval(timer);
+        setTimeout(() => {  
+          if (seconds <= 15) {
+            alert(`🎉 Incredible! You solved the maze in ${seconds} seconds!`);
+          } else if (seconds <= 30) {
+            alert(`🎉 Congratulations! You solved the maze in ${seconds} seconds!`);
+          } else {
+            alert(`🎉 Congratulations! You solved the maze in ${seconds} seconds.`);
+          }
+        }, 100);
+      }
+    }
+
+    // Keyboard controls
+    document.addEventListener('keydown', (e) => {
+      const keyMap = {
+        'ArrowUp': 'up',
+        'ArrowRight': 'right',
+        'ArrowDown': 'down',
+        'ArrowLeft': 'left'
+      };
+      if (keyMap[e.key]) {
+        e.preventDefault();
+        movePlayer(keyMap[e.key]);
+      }
+    });
+
+    // Touch controls for swipe
+    let lastTouch = null;
+    canvas.addEventListener('touchstart', (e) => {
+      lastTouch = e.touches[0];
+    });
+    canvas.addEventListener('touchmove', (e) => {
+      if (!lastTouch) return;
+      let touch = e.touches[0];
+      let dx = touch.clientX - lastTouch.clientX;
+      let dy = touch.clientY - lastTouch.clientY;
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (Math.abs(dx) > 20) {
+          movePlayer(dx > 0 ? 'right' : 'left');
+          lastTouch = touch;
+        }
+      } else {
+        if (Math.abs(dy) > 20) {
+          movePlayer(dy > 0 ? 'down' : 'up');
+          lastTouch = touch;
+        }
+      }
+    });
+    canvas.addEventListener('touchend', () => lastTouch = null);
+
+    // Mouse drag controls
+    let mouseDown = false;
+    let startX, startY;
+    canvas.addEventListener('mousedown', (e) => {
+      mouseDown = true;
+      startX = e.clientX;
+      startY = e.clientY;
+    });
+    canvas.addEventListener('mouseup', () => {
+      mouseDown = false;
+    });
+    canvas.addEventListener('mouseleave', () => {
+      mouseDown = false;
+    });
+    canvas.addEventListener('mousemove', (e) => {
+      if (!mouseDown) return;
+      let dx = e.clientX - startX;
+      let dy = e.clientY - startY;
+
+      if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
+        if (Math.abs(dx) > Math.abs(dy)) {
+          movePlayer(dx > 0 ? 'right' : 'left');
+        } else {
+          movePlayer(dy > 0 ? 'down' : 'up');
+        }
+        mouseDown = false;
+      }
+    });
+
+    tryAgainBtn.addEventListener('click', () => {
+      setup();
+    });
+
+    window.addEventListener('resize', () => {
+      setup();
+    });
+
+    setup();
+  </script>
+</body>
+</html>
+

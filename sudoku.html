@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sudoku Game</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
+    body {
+      font-family: 'Orbitron', sans-serif, monospace;
+      margin: 0; padding: 0;
+      background: #000;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 10px;
+    }
+
+    h1 {
+      margin-bottom: 15px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      font-size: 2.4rem;
+      user-select: none;
+    }
+
+    #difficulty-selection {
+      margin-bottom: 30px;
+      display: flex;
+      gap: 25px;
+      justify-content: center;
+      align-items: center;
+      padding: 50px 60px;
+      border-radius: 15px;
+      /* Background image placeholder - replace URL below */
+      background: url('https://your-image-url-here.com/background.jpg') no-repeat center center/cover;
+      box-shadow: 0 0 20px #00f2ff;
+      flex-wrap: wrap;
+    }
+
+    button {
+      background: linear-gradient(135deg, #00f2ff, #5b00ff);
+      border: none;
+      padding: 14px 28px;
+      border-radius: 12px;
+      color: white;
+      font-size: 1.3rem;
+      cursor: pointer;
+      transition: 0.3s;
+      min-width: 120px;
+      font-weight: 700;
+      box-shadow: 0 0 8px #5b00ff;
+      user-select: none;
+    }
+    button:hover, button:focus {
+      outline: none;
+      transform: scale(1.08);
+      box-shadow: 0 0 25px #00f2ff;
+    }
+
+    #game {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      user-select: none;
+      width: 100%;
+      max-width: 540px;
+    }
+
+    #timer {
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+    }
+
+    table {
+      border-collapse: collapse;
+      margin-bottom: 15px;
+      width: 100%;
+      max-width: 540px;
+      aspect-ratio: 1 / 1;
+      table-layout: fixed;
+      background-color: #111;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #003366;
+    }
+
+    table.sudoku-9 {
+      max-width: 360px;
+      aspect-ratio: 1 / 1;
+    }
+    table.sudoku-12 {
+      max-width: 480px;
+      aspect-ratio: 1 / 1;
+    }
+
+    td {
+      border: 1px solid #444;
+      width: auto;
+      height: auto;
+      text-align: center;
+      vertical-align: middle;
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: #111;
+      color: white;
+      padding: 0;
+      position: relative;
+      user-select: text;
+    }
+
+    td input {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: transparent;
+      color: white;
+      font-size: 1.5rem;
+      text-align: center;
+      font-weight: 700;
+      outline-offset: 2px;
+      outline-color: #00f2ff;
+      user-select: text;
+    }
+    td input:focus {
+      background-color: #002233;
+      outline-style: solid;
+      outline-width: 2px;
+    }
+
+    /* Thicker block borders */
+
+    /* 9x9 sudoku blocks 3x3 */
+    table.sudoku-9 td:nth-child(3n) {
+      border-right: 3px solid #00f2ff;
+    }
+    table.sudoku-9 tr:nth-child(3n) td {
+      border-bottom: 3px solid #00f2ff;
+    }
+    table.sudoku-9 td:nth-child(1) {
+      border-left: 3px solid #00f2ff;
+    }
+    table.sudoku-9 tr:nth-child(1) td {
+      border-top: 3px solid #00f2ff;
+    }
+
+    /* 12x12 sudoku blocks 3x4 */
+    table.sudoku-12 td:nth-child(3n) {
+      border-right: 3px solid #00f2ff;
+    }
+    table.sudoku-12 tr:nth-child(4n) td {
+      border-bottom: 3px solid #00f2ff;
+    }
+    table.sudoku-12 td:nth-child(1) {
+      border-left: 3px solid #00f2ff;
+    }
+    table.sudoku-12 tr:nth-child(1) td {
+      border-top: 3px solid #00f2ff;
+    }
+
+    #message {
+      min-height: 1.6rem;
+      font-size: 1.2rem;
+      margin-top: 12px;
+      font-weight: 700;
+      color: #0f0;
+      user-select: none;
+      letter-spacing: 1px;
+      transition: color 0.3s ease;
+      min-width: 300px;
+    }
+
+    #buttons-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    #back-btn {
+      background: #ff3366;
+      margin-top: 10px;
+      min-width: 90px;
+      box-shadow: 0 0 12px #ff3366;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.8rem;
+      }
+      #difficulty-selection {
+        padding: 30px 20px;
+        gap: 16px;
+      }
+      button {
+        font-size: 1rem;
+        min-width: 90px;
+        padding: 10px 20px;
+      }
+      #timer {
+        font-size: 1.1rem;
+      }
+      table.sudoku-9 {
+        max-width: 300px;
+      }
+      table.sudoku-12 {
+        max-width: 360px;
+      }
+      #message {
+        min-width: 220px;
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Sudoku</h1>
+
+  <div id="difficulty-selection" role="region" aria-label="Select Sudoku difficulty">
+    <button id="easy-btn" aria-pressed="false" aria-label="Start easy 9 by 9 sudoku">Easy (9x9)</button>
+    <button id="hard-btn" aria-pressed="false" aria-label="Start hard 12 by 12 sudoku">Hard (12x12)</button>
+  </div>
+
+  <div id="game" role="main" aria-live="polite">
+    <div id="timer" aria-live="off" aria-atomic="true">Time: 0s</div>
+
+    <div id="sudoku-container"></div>
+
+    <div id="buttons-row">
+      <button id="check-btn" aria-label="Check if current solution is correct">Check Solution</button>
+      <button id="back-btn" aria-label="Return to difficulty selection">Back</button>
+    </div>
+
+    <div id="message" aria-live="assertive"></div>
+  </div>
+
+  <script>
+    // Globals
+    let gridSize = 9;
+    let blockRows = 3;
+    let blockCols = 3;
+
+    let solvedGrid = [];
+    let puzzleGrid = [];
+
+    let timerInterval = null;
+    let secondsElapsed = 0;
+
+    const difficultySelection = document.getElementById('difficulty-selection');
+    const gameArea = document.getElementById('game');
+    const sudokuContainer = document.getElementById('sudoku-container');
+    const timerDisplay = document.getElementById('timer');
+    const messageEl = document.getElementById('message');
+    const backBtn = document.getElementById('back-btn');
+    const checkBtn = document.getElementById('check-btn');
+
+    // Utility - deep copy grid
+    function deepCopyGrid(grid) {
+      return grid.map(row => row.slice());
+    }
+
+    // Generate solved grid (pattern-based)
+    // Formula: (r * blockCols + Math.floor(r / blockRows) + c) % size + 1
+    function generateBaseGrid(size, blockRows, blockCols) {
+      const grid = [];
+      for(let r=0; r<size; r++) {
+        grid[r] = [];
+        for(let c=0; c<size; c++) {
+          grid[r][c] = ((r * blockCols + Math.floor(r / blockRows) + c) % size) + 1;
+        }
+      }
+      return grid;
+    }
+
+    // Shuffle rows within blocks to maintain Sudoku validity
+    function shuffleRows(grid, blockRows) {
+      const size = grid.length;
+      for (let block = 0; block < size / blockRows; block++) {
+        for (let i = 0; i < blockRows - 1; i++) {
+          const r1 = block * blockRows + i;
+          const r2 = block * blockRows + i + 1;
+          if(Math.random() > 0.5) {
+            [grid[r1], grid[r2]] = [grid[r2], grid[r1]];
+          }
+        }
+      }
+    }
+
+    // Shuffle columns within blocks
+    function shuffleCols(grid, blockCols) {
+      const size = grid.length;
+      for (let block = 0; block < size / blockCols; block++) {
+        for (let i = 0; i < blockCols - 1; i++) {
+          for(let r=0; r<size; r++) {
+            if(Math.random() > 0.5) {
+              const c1 = block * blockCols + i;
+              const c2 = block * blockCols + i + 1;
+              [grid[r][c1], grid[r][c2]] = [grid[r][c2], grid[r][c1]];
+            }
+          }
+        }
+      }
+    }
+
+    // Remove numbers to create puzzle with blanks
+    function createPuzzle(solved, blankRatio) {
+      const size = solved.length;
+      const puzzle = deepCopyGrid(solved);
+      const totalCells = size * size;
+      const blanksNeeded = Math.floor(totalCells * blankRatio);
+      let blanksMade = 0;
+
+      while (blanksMade < blanksNeeded) {
+        const r = Math.floor(Math.random() * size);
+        const c = Math.floor(Math.random() * size);
+        if (puzzle[r][c] !== 0) {
+          puzzle[r][c] = 0;
+          blanksMade++;
+        }
+      }
+      return puzzle;
+    }
+
+    // Render sudoku table and inputs
+    function renderGrid(solved, puzzle) {
+      sudokuContainer.innerHTML = '';
+      const size = solved.length;
+      const table = document.createElement('table');
+      table.className = `sudoku-${size}`;
+
+      for(let r=0; r < size; r++) {
+        const tr = document.createElement('tr');
+        for(let c=0; c < size; c++) {
+          const td = document.createElement('td');
+
+          // If blank in puzzle, create input
+          if(puzzle[r][c] === 0) {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.inputMode = 'numeric';
+            input.autocomplete = 'off';
+            input.maxLength = size > 9 ? 2 : 1; // max 2 digits for 12x12
+            input.setAttribute('aria-label', `Row ${r+1} Column ${c+1} input`);
+            input.style.userSelect = 'text';
+
+            input.addEventListener('input', (e) => {
+              // Clean non-numeric characters
+              let val = e.target.value.replace(/[^0-9]/g, '');
+              // Validate range
+              if(val !== '') {
+                const num = parseInt(val);
+                if(num < 1 || num > size) val = '';
+              }
+              e.target.value = val;
+              // Do not auto check here anymore, user can check manually now
+            });
+            td.appendChild(input);
+          } else {
+            td.textContent = solved[r][c];
+            td.style.color = '#5aff00';
+            td.style.fontWeight = 'bold';
+            td.style.backgroundColor = '#111';
+            td.style.userSelect = 'none';
+          }
+          tr.appendChild(td);
+        }
+        table.appendChild(tr);
+      }
+      sudokuContainer.appendChild(table);
+    }
+
+    // Check if puzzle solved correctly (all blanks filled correctly)
+    // Returns true if solved, false otherwise
+    function isSolved() {
+      const inputs = sudokuContainer.querySelectorAll('input');
+      let idx = 0;
+      for(let r=0; r < gridSize; r++) {
+        for(let c=0; c < gridSize; c++) {
+          if(puzzleGrid[r][c] === 0) {
+            const val = inputs[idx].value;
+            if(val === '' || parseInt(val) !== solvedGrid[r][c]){
+              return false;
+            }
+            idx++;
+          }
+        }
+      }
+      return true;
+    }
+
+    // On Check button click
+    function checkSolution() {
+      if(isSolved()) {
+        showMessage('🎉 Congratulations! You solved it!', 'success');
+        stopTimer();
+      } else {
+        showMessage('❌ There are mistakes or incomplete cells. Keep trying!', 'error');
+      }
+    }
+
+    // Show messages below grid
+    function showMessage(msg, type) {
+      messageEl.textContent = msg;
+      if(type === 'success'){
+        messageEl.style.color = '#0f0';
+      } else if(type === 'error'){
+        messageEl.style.color = '#f33';
+      } else {
+        messageEl.style.color = 'white';
+      }
+    }
+
+    // Timer controls
+    function startTimer() {
+      stopTimer();
+      secondsElapsed = 0;
+      displayTimer();
+      timerInterval = setInterval(() => {
+        secondsElapsed++;
+        displayTimer();
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if(timerInterval) clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    function displayTimer() {
+      timerDisplay.textContent = `Time: ${secondsElapsed}s`;
+    }
+
+    // Set difficulty params
+    function setDifficulty(difficulty) {
+      if(difficulty === 'easy'){
+        gridSize = 9;
+        blockRows = 3;
+        blockCols = 3;
+      } else {
+        gridSize = 12;
+        blockRows = 3;
+        blockCols = 4;
+      }
+    }
+
+    // Start new game by difficulty
+    function newGame(difficulty) {
+      setDifficulty(difficulty);
+
+      solvedGrid = generateBaseGrid(gridSize, blockRows, blockCols);
+      shuffleRows(solvedGrid, blockRows);
+      shuffleCols(solvedGrid, blockCols);
+
+      // More blanks for harder game
+      const blankRatio = difficulty === 'easy' ? 0.55 : 0.7;
+
+      puzzleGrid = createPuzzle(
+        solvedGrid,
+        blankRatio
+      );
+
+      renderGrid(solvedGrid, puzzleGrid);
+
+      difficultySelection.style.display = 'none';
+      gameArea.style.display = 'flex';
+
+      startTimer();
+      showMessage('', '');
+    }
+
+    // Event listeners
+    document.getElementById('easy-btn').addEventListener('click', () => newGame('easy'));
+    document.getElementById('hard-btn').addEventListener('click', () => newGame('hard'));
+
+    backBtn.addEventListener('click', () => {
+      stopTimer();
+      difficultySelection.style.display = 'flex';
+      gameArea.style.display = 'none';
+      sudokuContainer.innerHTML = '';
+      showMessage('', '');
+    });
+
+    checkBtn.addEventListener('click', () => checkSolution());
+
+  </script>
+
+</body>
+</html>
+
