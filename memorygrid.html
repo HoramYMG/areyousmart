@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Memory Grid Game</title>
+  <style>
+    body {
+      background: #111;
+      color: #0ff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    .screen {
+      display: none;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .active {
+      display: flex;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .btn-group button,
+    .action-btn {
+      padding: 10px 20px;
+      margin: 10px;
+      border: none;
+      background: #00f2ff;
+      color: #000;
+      font-weight: bold;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .grid {
+      display: grid;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .cell {
+      width: 60px;
+      height: 60px;
+      background: #222;
+      color: #0ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.2rem;
+      border: 2px solid #0ff;
+      border-radius: 6px;
+    }
+
+    .cell input {
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      background: #000;
+      color: #0ff;
+      border: none;
+      font-size: 1.2rem;
+      outline: none;
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Start Screen -->
+  <div id="startScreen" class="screen active">
+    <h1>Memory Grid Game</h1>
+
+    <h1>Choose Difficulty</h1>
+    <div class="btn-group">
+      <button onclick="startGame('easy')">Easy</button>
+      <button onclick="startGame('medium')">Medium</button>
+      <button onclick="startGame('hard')">Hard</button>
+    </div>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="gameScreen" class="screen">
+    <h1 id="levelTitle"></h1>
+    <div id="grid" class="grid"></div>
+
+    <div class="button-row">
+      <button class="action-btn hidden" id="submitBtn" onclick="checkAnswer()">Submit</button>
+      <button class="action-btn" onclick="goBack()">Back</button>
+    </div>
+
+    <p id="resultMsg"></p>
+  </div>
+
+  <script>
+    let gridSize = 3;
+    let displayTime = 3000;
+    let numberPositions = [];
+    let numberMap = {};
+
+    function startGame(level) {
+      switch (level) {
+        case 'easy':
+          gridSize = 3;
+          displayTime = 3000;
+          break;
+        case 'medium':
+          gridSize = 4;
+          displayTime = 5000;
+          break;
+        case 'hard':
+          gridSize = 5;
+          displayTime = 10000;
+          break;
+      }
+
+      document.getElementById('levelTitle').textContent = level.charAt(0).toUpperCase() + level.slice(1);
+      document.getElementById('startScreen').classList.remove('active');
+      document.getElementById('gameScreen').classList.add('active');
+
+      initGrid();
+      setTimeout(assignRandomNumbers, 100); // Slight delay for smooth rendering
+    }
+
+    function goBack() {
+      document.getElementById('gameScreen').classList.remove('active');
+      document.getElementById('startScreen').classList.add('active');
+    }
+
+    function initGrid() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+      numberPositions = [];
+      numberMap = {};
+      document.getElementById('submitBtn').classList.add('hidden');
+      document.getElementById('resultMsg').textContent = '';
+
+      for (let i = 0; i < gridSize * gridSize; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.setAttribute('data-index', i);
+        grid.appendChild(cell);
+      }
+    }
+
+    function assignRandomNumbers() {
+      const total = gridSize * gridSize;
+      const numberCount = Math.floor(total * 0.5); // show on ~50% squares
+
+      while (numberPositions.length < numberCount) {
+        const idx = Math.floor(Math.random() * total);
+        if (!numberPositions.includes(idx)) numberPositions.push(idx);
+      }
+
+      numberPositions.forEach(idx => {
+        const num = Math.floor(Math.random() * 100); // 0–99
+        numberMap[idx] = num;
+        const cell = document.querySelector(`.cell[data-index="${idx}"]`);
+        cell.textContent = num;
+      });
+
+      setTimeout(() => {
+        revealInputs();
+      }, displayTime);
+    }
+
+    function revealInputs() {
+      const cells = document.querySelectorAll('.cell');
+      cells.forEach((cell, idx) => {
+        cell.textContent = '';
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = 0;
+        input.max = 99;
+        input.setAttribute('data-input-index', idx);
+        cell.appendChild(input);
+      });
+
+      document.getElementById('submitBtn').classList.remove('hidden');
+    }
+
+    function checkAnswer() {
+      let correct = 0;
+
+      numberPositions.forEach(idx => {
+        const input = document.querySelector(`input[data-input-index="${idx}"]`);
+        if (input && parseInt(input.value) === numberMap[idx]) {
+          correct++;
+        }
+      });
+
+      const msg = `You got ${correct} out of ${numberPositions.length} correct.`;
+      document.getElementById('resultMsg').textContent = msg;
+      document.getElementById('submitBtn').classList.add('hidden');
+
+      setTimeout(() => {
+        initGrid();
+        setTimeout(assignRandomNumbers, 100);
+      }, 2000); // Restart after 2 seconds
+    }
+  </script>
+</body>
+</html>
+

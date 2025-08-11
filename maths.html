@@ -1,0 +1,213 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Maths</title>
+  <style>
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background-image: url('URL_HERE'); /* You can replace this later */
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-color: #000;
+
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      text-align: center;
+      padding: 10px;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .button-container {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button {
+      background: linear-gradient(135deg, #00f2ff, #5b00ff);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.3s;
+      min-width: 90px;
+    }
+    #quiz input {
+  margin-bottom: 8px; /* space below the input */
+}
+
+#quiz div button {
+  margin-top: 5px; /* optional: space above the button */
+}
+
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #00f2ff;
+    }
+
+    #question {
+      font-size: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    #answer {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+    }
+
+    input {
+      padding: 12px 10px;
+      border-radius: 5px;
+      border: none;
+      margin-top: 10px;
+      font-size: 1rem;
+      height: 38px;
+      box-sizing: border-box;
+      min-width: 150px;
+    }
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+      .button-container {
+        gap: 10px;
+      }
+      button {
+        font-size: 0.9rem;
+        padding: 10px 16px;
+        min-width: 70px;
+      }
+      #question {
+        font-size: 1.2rem;
+      }
+      #answer {
+        font-size: 1rem;
+      }
+      input {
+        font-size: 0.9rem;
+        height: 34px;
+        min-width: 120px;
+        margin-top: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Maths</h1>
+  <div class="button-container">
+    <button onclick="startQuiz('easy')">Easy</button>
+    <button onclick="startQuiz('medium')">Medium</button>
+    <button onclick="startQuiz('hard')">Hard</button>
+  </div>
+  <div id="quiz">
+    <div id="answer"></div>
+    <div id="question"></div>
+    <input type="number" id="userAnswer" placeholder="Enter your answer" />
+    <div>
+      <button onclick="checkAnswer()">Submit</button>
+    </div>
+    
+  </div>
+
+  <script>
+    let correctAnswer = 0;
+    let consecutiveCorrect = 0;
+    let currentLevel = '';
+
+    const congratsMessages = [
+      "Hooray!",
+      "Well done!",
+      "Way to go!",
+      "Keep it up!",
+      "Nice!"
+    ];
+
+    function startQuiz(level) {
+      currentLevel = level;
+      generateQuestion(level);
+      document.getElementById('answer').innerText = '';
+      document.getElementById('userAnswer').value = '';
+      document.getElementById('userAnswer').focus();
+    }
+
+    function generateQuestion(level) {
+      let min, max;
+      switch (level) {
+        case 'easy':
+          min = 1; max = 9;
+          break;
+        case 'medium':
+          min = 10; max = 99;
+          break;
+        case 'hard':
+          min = 100; max = 999;
+          break;
+      }
+      const operations = ['+', '-', '*', '/'];
+      const op = operations[Math.floor(Math.random() * operations.length)];
+      let a = Math.floor(Math.random() * (max - min + 1)) + min;
+      let b = Math.floor(Math.random() * (max - min + 1)) + min;
+
+      if (op === '/') {
+        a = a * b; // ensure integer division
+      }
+
+      correctAnswer = eval(`${a} ${op} ${b}`);
+      correctAnswer = Math.round(correctAnswer * 100) / 100;
+      document.getElementById('question').innerText = `What is ${a} ${op} ${b}?`;
+      document.getElementById('userAnswer').value = '';
+      document.getElementById('userAnswer').focus();
+    }
+
+    function checkAnswer() {
+      const userAns = parseFloat(document.getElementById('userAnswer').value);
+      const answerDiv = document.getElementById('answer');
+      if (Math.abs(userAns - correctAnswer) < 0.01) {
+        consecutiveCorrect++;
+        answerDiv.innerText = `Correct! Consecutive correct answers: ${consecutiveCorrect}`;
+        if (consecutiveCorrect > 5) {
+          const msg = congratsMessages[Math.floor(Math.random() * congratsMessages.length)];
+          answerDiv.innerText += ` 🎉 ${msg} You have ${consecutiveCorrect} correct answers in a row!`;
+        }
+      } else {
+        answerDiv.innerText = `Wrong! The correct answer is ${correctAnswer}`;
+        consecutiveCorrect = 0;
+      }
+      generateQuestion(currentLevel);
+    }
+
+    document.getElementById('userAnswer').addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        checkAnswer();
+      }
+    });
+
+    // 🔧 Fix: Force reflow to ensure correct rendering on first load/tap
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.body.style.display = 'none';
+        void document.body.offsetHeight; // Trigger reflow
+        document.body.style.display = '';
+      }, 50);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Futuristic Button Panel</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Orbitron', sans-serif;
+      background: 
+        radial-gradient(ellipse at center, #1a1a1a 0%, #0d0d0d 100%),
+        url('your-image-url.jpg') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      max-width: 600px;
+      width: 90%;
+    }
+
+    .futuristic-button {
+      background: linear-gradient(135deg, #00f2ff, #5b00ff);
+      color: white;
+      padding: 15px 20px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      box-shadow: 0 0 20px rgba(0, 242, 255, 0.6);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .futuristic-button::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+      animation: rotate 6s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes rotate {
+      0% {
+        transform: rotate(0);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .futuristic-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 25px rgba(91, 0, 255, 0.9);
+    }
+
+    @media (max-width: 600px) {
+      .button-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .futuristic-button {
+        font-size: 0.9rem;
+        padding: 12px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="button-grid">
+    <button class="futuristic-button" onclick="navigate('maths')">Maths</button>
+    <button class="futuristic-button" onclick="navigate('english')">English</button>
+    <button class="futuristic-button" onclick="navigate('sudoku')">Sudoku</button>
+    <button class="futuristic-button" onclick="navigate('memory')">Memory Test</button>
+    <button class="futuristic-button" onclick="navigate('reaction')">Reaction Test</button>
+    <button class="futuristic-button" onclick="navigate('memorygrid')">Memory Grid</button>
+  </div>
+
+  <script>
+    function navigate(game) {
+      switch (game) {
+        case 'maths':
+          window.location.href = 'maths.html';
+          break;
+        case 'english':
+          window.location.href = 'english.html';
+          break;
+        case 'sudoku':
+          window.location.href = 'sudoku.html';
+          break;
+        case 'memory':
+          window.location.href = 'memory.html';
+          break;
+        case 'reaction':
+          window.location.href = 'reaction.html';
+          break;
+        case 'memorygrid':
+          window.location.href = 'memorygrid.html';
+          break;
+      }
+    }
+  </script>
+</body>
+</html>
+
